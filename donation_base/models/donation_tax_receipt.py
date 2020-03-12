@@ -13,7 +13,7 @@ class DonationTaxReceipt(models.Model):
     _order = 'id desc'
     _rec_name = 'number'
 
-    number = fields.Char(string='Receipt Number')
+    number = fields.Char(string='Receipt Number', default='/')
     date = fields.Date(
         string='Date',
         required=True,
@@ -57,15 +57,13 @@ class DonationTaxReceipt(models.Model):
         required=True
     )
 
-    # Maybe we can drop that code with the new seq management on v9
     @api.model
-    def create(self, vals=None):
-        if vals is None:
-            vals = {}
+    def create(self, vals):
         date = vals.get('donation_date')
-        vals['number'] = self.env['ir.sequence'].with_context(
-            date=date).next_by_code('donation.tax.receipt')
-        return super(DonationTaxReceipt, self).create(vals)
+        if vals.get("number", "/") == "/":
+            vals['number'] = self.env['ir.sequence'].with_context(
+                date=date).next_by_code('donation.tax.receipt')
+        return super().create(vals)
 
     @api.model
     def update_tax_receipt_annual_dict(
